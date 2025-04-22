@@ -1,0 +1,19 @@
+haksa-backend/
+├── server.js                  👈 백엔드 진입점 (서버 실행)
+├── .env                       👈 DB, 포트, JWT 등 설정을 외부에서 관리
+├── config/
+│   └── db.js                  👈 MySQL DB 연결 설정
+├── routes/
+│   └── auth.js                👈 로그인 라우터 (경로 처리만 담당)
+├── controllers/
+│   └── authController.js      👈 로그인 로직 처리 (JWT 발급 등)
+├── models/
+│   └── userModel.js           👈 DB 질의 (학생 정보 SELECT)
+
+
+server.js           전체 서버 실행 및 미들웨어 설정
+routes/             어떤 URL이 어떤 기능을 실행할지 연결
+controllers/        실제 로직 처리(로그인 등)
+models/             DB 쿼리 직접 실행
+config/             DB 연결 관리
+.env                환경 변수로 민감 정보 분리
