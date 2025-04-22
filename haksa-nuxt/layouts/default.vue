@@ -52,6 +52,19 @@
 
 <script setup>
 import Sidebar from '~/components/Sidebar.vue';
+
+import { onMounted } from 'vue';
+import { useUserStore } from '~/stores/userStore';
+
+const userStore = useUserStore();
+
+// 앱이 처음 로드될 때 사용자 정보를 가져옵니다.
+// 이 코드는 페이지가 로드될 때마다 실행됩니다.
+// 만약 사용자가 로그인하지 않았다면, 로그인 페이지로 리다이렉트합니다.
+onMounted(() => {
+  userStore.fetchMe();
+});
+
 </script>
 <style scoped>
 .navbar-brand {
