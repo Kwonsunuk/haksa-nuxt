@@ -17,7 +17,7 @@ import express from 'express';
  * 이 함수는 비즈니스 로직을 처리하는 부분으로, 라우터와 분리하여 관리한다.
  * 이를 통해 코드의 가독성을 높이고, 유지보수를 쉽게 한다.
  */
-import { login } from '../controllers/authController.js';
+import { login, me } from '../controllers/authController.js';
 
 
 /**
@@ -34,6 +34,15 @@ const router = express.Router();
  * -"api/auth"는 server.js에서 미리 붙이므로 여기서는 "/login"만 정의한다.
  */
 router.post('/login', login);
+
+/**
+ * 사용자 정보 조회 API 경로를 정의한다.
+ * 클라이언트가 GET /api/me 요청을 보내면, me 함수를 호출한다.
+ * 이 함수는 사용자의 정보를 조회할 때 호출된다.
+ * 이 함수는 비즈니스 로직을 처리하는 부분으로, 라우터와 분리하여 관리한다.
+ * 이를 통해 코드의 가독성을 높이고, 유지보수를 쉽게 한다.
+ */
+router.get('/me', me);
 
 /**
  * 이 router 객체를 외부에서 사용할 수 있도록 export 한다.

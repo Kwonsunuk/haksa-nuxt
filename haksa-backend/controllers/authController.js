@@ -75,17 +75,44 @@ export async function login(req, res) {
     const token = jwt.sign(
       { student_id: user.student_id },
       process.env.JWT_SECRET,
-      { expiresIn: "1h" }
+      { expiresIn: "1d" }
     );
 
     // 로그인 성공 시 토큰과 학생 정보를 클라이언트에 반환한다.
     // res.json은 JSON 형식으로 응답을 반환하는 함수이다.
     // 클라이언트는 이 토큰을 저장하고, 이후 요청 시 이 토큰을 서버에 전송한다.
     // 서버는 JWT를 검증하여 클라이언트의 인증 정보를 확인한다.
-    res.json({ token, student: { id: user.student_id, name: user.name } });
+    console.log('[authController] 발급한 token:', token);
+    res.json({
+      token,
+      student: {
+        student_id: user.student_id,
+        name: user.name
+      }
+    });
+    
   } catch (err) {
     // 예외 발생 시 500 응답 (서버 내부 오류)
     console.error(err);
     res.status(500).json({ message: "서버 오류" });
   }
 }
+
+// 로그인 상태 복원용 API
+export function me(req, res) {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ message: '토큰이 없습니다.' });
+  }
+
+  const token = authHeader.split(' ')[1];
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    // 토큰이 유효하면 사용자 정보 응답 (DB 조회 생략하고 간단하게)
+    return res.json({ student: { student_id: decoded.student_id, name: '테스트 유저' } });
+  } catch (err) {
+    return res.status(401).json({ message: '유효하지 않은 토큰입니다.' });
+  }
+}
+
