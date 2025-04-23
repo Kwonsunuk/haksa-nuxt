@@ -46,11 +46,16 @@ const grades = ref([]);
   
   // GPA 계산
   const averageGPA = computed(() => {
-    if (!grades.value.length) return '0.00';
-    const totalPoints = grades.value.reduce((sum, g) => sum + (g.grade_point || 0), 0);
-    return (totalPoints / grades.value.length).toFixed(2);
-  });
-  
+  if (!grades.value.length) return '0.00';
+
+  const totalPoints = grades.value.reduce((sum, g) => {
+    const point = parseFloat(g.grade_point); // 문자열 -> 숫자 변환
+    return sum + (isNaN(point) ? 0 : point);
+  }, 0);
+
+  return (totalPoints / grades.value.length).toFixed(2);
+});
+
   async function fetchGrades() {
     try {
       const res = await fetch(`http://localhost:4000/api/grades?year=${selectedYear.value}&term=${selectedTerm.value}`, {
