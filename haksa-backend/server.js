@@ -36,6 +36,12 @@ import dotenv from 'dotenv';
  */
 import authRouter from './routes/auth.js';
 
+/**
+ * 시간표 관련 라우터를 불러온다.
+ * 시간표 조회 요청을 처리하는 라우터
+ */
+import scheduleRouter from './routes/schedule.js';
+
 // .env 파일을 로드하여 환경 변수를 설정한다.
 dotenv.config();
 
@@ -88,6 +94,8 @@ app.use(express.json());
  * 예: POST /api/auth/login -> routes/auth.js의 login 함수 호출
  */
 app.use('/api/auth', authRouter);
+
+app.use('/api/schedule', scheduleRouter)
 
 /**
  * 서버가 실행될 포트를 지정한다.

@@ -1,0 +1,2 @@
+GET http://localhost:4000/api/schedule?year=2024&term=SPRING
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdHVkZW50X2lkIjoiUzIwMjMwMDAxIiwiaWF0IjoxNzQ1NDAxMDQwLCJleHAiOjE3NDU0MDI4NDB9.4A6n3JAu-ZuO8gZ5m-983CflCIxvCgdmirw5wCNCaS8

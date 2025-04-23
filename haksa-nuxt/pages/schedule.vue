@@ -1,9 +1,9 @@
 <!-- pages/schedule.vue -->
 <template>
   <div class="container">
-    <h2 class="mb-3">🗓️ 수강 시간표</h2>
+    <h2 class="mb-4">🗓️ 시간표 조회</h2>
 
-    <!-- 학기/연도 선택 필터 -->
+    <!-- 필터 영역 -->
     <div class="row mb-4">
       <div class="col-md-3">
         <select v-model="selectedYear" class="form-select" @change="fetchSchedule">
@@ -12,63 +12,69 @@
       </div>
       <div class="col-md-3">
         <select v-model="selectedTerm" class="form-select" @change="fetchSchedule">
-          <option value="SPRING">1학기/봄학기</option>
-          <option value="FALL">2학기/가을학기</option>
+          <option value="SPRING">1학기 (Spring)</option>
+          <option value="FALL">2학기 (Fall)</option>
         </select>
       </div>
     </div>
 
-    <!-- 시간표 로딩 표시 -->
-    <div v-if="schedule.length === 0 && isLoading" class="text-center">
-      <p>수업 시간표를 불러오는 중입니다...</p>
-      <div class="spinner-border" role="status">
-        <span class="visually-hidden">Loading...</span>
-      </div>
-    </div>
-    <!-- 수업 시간표  컴포넌트-->
-    <ScheduleTable v-else :schedule="schedule" :selectedYear="selectedYear" :selectedTerm="selectedTerm" />
+    <!-- 시간표 출력 -->
+    <ScheduleTable :schedule="schedule" :selectedYear="selectedYear" :selectedTerm="selectedTerm" />
   </div>
 </template>
+
 
 <script setup>
 import { ref, onMounted } from 'vue';
 import ScheduleTable from '~/components/ScheduleTable.vue';
+import { useUserStore } from '~/stores/userStore';
+import { useCookie } from '#app'; // 쿠키 유틸 가져오기 (setup 내부에서 사용하기 위해)
+
+const userStore = useUserStore();
 
 // ✅ 현재 연도 기준 연도 리스트 자동 생성
 const currentYear = new Date().getFullYear();
-const years = Array.from({ length: 3 }, (_, i) => currentYear - 1 + i);// 학기/연도 선택 필터
+const years = Array.from({ length: 3 }, (_, i) => currentYear - 1 + i);
+const currentMonth = new Date().getMonth() + 1;
 
 // 기본 선택값
-const selectedYear = ref(new Date().getFullYear()); // 기본 값: 현재 연도
-const selectedTerm = ref(getCurrentTerm()); // 기본 값: 현재 학기
-const schedule = ref([]); // 수업 시간표 데이터
-const isLoading = ref(false); // 로딩 상태
+const selectedYear = ref(currentYear);
+const selectedTerm = ref(getCurrentTerm());
+const schedule = ref([]);
+const isLoading = ref(false);
 
-// 현재 학기를 계산하는 함수(1~6월: SPRING, 7~12월: FALL)
+// 현재 학기를 계산하는 함수
 function getCurrentTerm() {
-  const month = new Date().getMonth() + 1; // 월은 0부터 시작하므로 +1
-  return month <= 6 ? 'SPRING' : 'FALL';
+  return currentMonth <= 6 ? 'SPRING' : 'FALL';
 }
 
 // 서버에서 수업 시간표를 가져오는 함수
 async function fetchSchedule() {
-  isLoading.value = true; // 로딩 상태 시작
+  isLoading.value = true;
   try {
-    const res = await fetch(`/api/schedule?year=${selectedYear.value}&term=${selectedTerm.value}`);
-    if (!res.ok) {
-      throw new Error('Failed to fetch schedule');
-    }
+    const token = useCookie('token').value; // ✅ 함수 안에서 호출
+    const res = await fetch(
+      `http://localhost:4000/api/schedule?year=${selectedYear.value}&term=${selectedTerm.value}`,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (!res.ok) throw new Error('시간표 조회 실패');
+
     const data = await res.json();
-    schedule.value = data.schedule || []; // 수업 시간표 데이터 배열을 받는다고 가정
+    schedule.value = Array.isArray(data) ? data : []; // ✅ 배열인지 확인
   } catch (error) {
-    console.error('Error fetching schedule:', error);
-    schedule.value = []; // 에러 발생 시 빈 배열로 초기화
+    console.error('[fetchSchedule] 시간표 불러오기 실패:', error);
+    schedule.value = [];
   } finally {
-    isLoading.value = false; // 로딩 상태 종료
+    isLoading.value = false;
   }
 }
 
-onMounted(() => {
-  fetchSchedule; // 컴포넌트가 마운트될 때 수업 시간표를 가져옴
-});
+onMounted(fetchSchedule);
 </script>
+
