@@ -14,7 +14,7 @@ export const useUserStore = defineStore('user', () => {
   // 로그인 시 서버로부터 전달받은 토큰을 저장하고, 요청 시 인증 헤더에 포함하는 데 사용된다.
   const token = ref(null); // JWT 토큰 저장
 
-  // 로그인
+  // 로그인 함수
   async function login(student_id, password) {
     // student_id와 password를 JSON 형식으로 POST 전송한다.
     const response = await fetch('http://localhost:4000/api/auth/login', {

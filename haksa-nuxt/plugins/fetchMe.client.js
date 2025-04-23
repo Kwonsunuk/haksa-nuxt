@@ -6,10 +6,15 @@ export default defineNuxtPlugin(async () => {
 
   console.log('[plugin] fetchMe plugin start');
 
+  // userStore의 me가 이미 존재하면 로그인 상태이므로 fetchMe 호출하지 않음
   if (userStore.me) {
     console.log('[plugin] already logged in');
     return;
   }
+
+  // userStiore의 me가 null이면 로그인 상태가 아니므로 fetchMe 호출
+  // ❗ fetchMe는 서버에 요청을 보내므로 async/await 사용
+  // ❗ useCookie는 클라이언트에서만 사용 가능하므로 async/await 사용
 
   const tokenCookie = useCookie('token');
   if (tokenCookie.value) {
@@ -26,8 +31,6 @@ export default defineNuxtPlugin(async () => {
     console.log('[plugin] no token, skip fetchMe');
   }
 });
-
-
 
 /*
 [사용자 로그인 성공]

@@ -1,0 +1,271 @@
+브라우저->>프론트: 로그인 정보 입력 (ID, PW)
+  프론트->>백엔드: POST /api/auth/login
+  백엔드->>DB: student_id로 유저 조회
+  DB-->>백엔드: 유저 정보 + 암호화 PW
+  백엔드->>백엔드: bcrypt 비교, JWT 생성
+  백엔드-->>프론트: token + student info
+  프론트->>로컬스토리지/쿠키: token 저장
+  브라우저->>프론트: 새로고침
+  프론트->>plugins/fetchMe: 쿠키에서 토큰 읽음
+  fetchMe->>백엔드: GET /api/auth/me
+  백엔드->>백엔드: JWT 토큰 검증
+  백엔드-->>프론트: student info
+  프론트-->>화면: 로그인된 상태 렌더링
+
+***실행 흐름***
+
+🔸 관련 파일
+plugins/fetchMe.client.js
+
+stores/userStore.js
+
+(1) Nuxt 앱이 실행되면
+[→ fetchMe.client.js가 자동 실행됨 (Nuxt의 client-side plugin)]
+
+(2) fetchMe.client.js 내부 로직
+[
+const userStore = useUserStore();
+
+if (userStore.me) return; // 이미 로그인 상태면 아무 작업 안 함
+
+const tokenCookie = useCookie('token'); // JWT 토큰을 쿠키에서 확인
+if (tokenCookie.value) {
+  await userStore.fetchMe(); // 토큰이 있으면 사용자 상태 복원 시도
+}
+]
+
+(3) userStore.fetchMe() 호출 → stores/userStore.js 내부로 이동
+[
+async function fetchMe() {
+  isFetching.value = true; // 로딩 상태 시작
+
+  // SSR 단계에서 window가 없으므로 무시
+  if (typeof window === 'undefined') {
+    isFetching.value = false;
+    return;
+  }
+
+  // 쿠키에서 저장된 토큰 가져옴
+  const tokenCookie = useCookie('token');
+  const savedToken = tokenCookie.value;
+
+  if (!savedToken) {
+    logout(); // 토큰 없으면 로그아웃
+    isFetching.value = false;
+    return;
+  }
+
+  // 백엔드로 인증 요청 보냄
+  const response = await fetch('http://localhost:4000/api/auth/me', {
+    headers: {
+      Authorization: `Bearer ${savedToken}`, // JWT를 Bearer 인증 방식으로 전송
+    },
+  });
+
+  // 응답이 성공이라면 사용자 정보 저장
+  if (response.ok) {
+    const data = await response.json();
+    me.value = data.student; // 사용자 정보 저장
+    token.value = savedToken; // 토큰 재지정
+  } else {
+    logout(); // 실패 시 로그아웃 처리
+  }
+
+  isFetching.value = false;
+}
+
+]
+
+[Nuxt 앱 실행 시] 
+→ plugins/fetchMe.client.js 자동 실행
+
+→ userStore.me가 존재하는지 확인
+  └ 있으면 아무것도 안 함 (이미 로그인 상태)
+
+→ 없으면 useCookie('token')으로 쿠키에서 JWT 토큰 가져옴
+  └ 없으면 fetchMe 종료 → 로그인 상태 아님
+  └ 있으면 userStore.fetchMe() 실행하여 상태 복원 시도
+
+→ fetchMe() 내부에서 백엔드 API /api/auth/me 호출
+  └ Authorization: Bearer <token> 헤더 포함
+
+→ 응답이 성공이면 userStore.me에 사용자 정보 저장
+  └ 이후 모든 컴포넌트에서 userStore.me 사용 가능
+
+
+***유저가 로그인 버튼 클릭***
+
+🔸 관련 파일
+components/LoginForm.vue
+stores/userStore.js
+controllers/authController.js
+models/userModel.js
+
+(1) 로그인 버튼 클릭 → LoginForm.vue
+
+[
+<form @submit.prevent="login">
+  <input v-model="student_id" />
+  <input v-model="password" type="password" />
+  <button type="submit">로그인</button>
+</form>
+
+async function login() {
+  await userStore.login(student_id.value, password.value);
+  router.push('/schedule');
+}
+]
+
+(2) login() 함수 실행 → stores/userStore.js
+[
+async function login(student_id, password) {
+  // student_id와 password를 JSON 형식으로 POST 전송한다.
+  const response = await fetch('http://localhost:4000/api/auth/login', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json', // json 형식으로 데이터 전송
+    },
+    body: JSON.stringify({
+      // 입력된 값을 JSON 형식으로 변환
+      student_id,
+      password,
+    }),
+  });
+
+  if (!response.ok) throw new Error('로그인 실패');
+
+  // 응답 상태가 200이면 JSON 형식으로 변환하여 사용자 정보와 토큰을 저장한다.
+  // JSON 형태로 응답 바디를 파싱
+  // 응답 바디는 { student: { name: '홍길동', student_id: 'S20230001' }, token: 'JWT_TOKEN' } 형태이다.
+  const data = await response.json(); // ✅ token, student
+  me.value = data.student;
+  token.value = data.token;
+
+  // ✅ 토큰을 쿠키와 localStorage에 저장
+  useCookie('token').value = data.token;
+  localStorage.setItem('token', data.token);
+}
+]
+
+(3) 백엔드로 전송된 요청 → /api/auth/login
+
+경로 타고 들어오는 과정 -> server.js에서 
+[
+    import authRouter from './routes/auth.js';
+    app.use('/api/auth', authRouter);
+]
+routes/auth.js에서 /api/auth/login경로가 완성이 됨.
+[
+    import express from 'express';
+    import { login } from '../controllers/authController.js';
+
+    const router = express.Router();
+    router.post('/login', login); // 🔥 /api/auth/login 경로 완성
+    export default router;
+]
+controllers/authController.js로 오게 됨.
+
+[
+/**
+ * 로그인 요청 처리
+ * - 사용자 학번과 비밀번호를 검증하고 JWT 토큰을 발급
+ */
+export async function login(req, res) {
+  const { student_id, password } = req.body;
+
+  try {
+    // 1. 사용자 존재 여부 확인
+    const user = await findStudentById(student_id);
+    if (!user) {
+      return res.status(401).json({ message: '존재하지 않는 사용자입니다.' });
+    }
+
+    // 2. 비밀번호 일치 여부 확인
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: '비밀번호가 일치하지 않습니다.' });
+    }
+
+    // 3. JWT 토큰 생성
+    const token = jwt.sign(
+      { student_id: user.student_id },
+      process.env.JWT_SECRET,
+      { expiresIn: '1d' } // 토큰 만료: 1일
+    );
+
+    // 4. 응답 반환 (JWT + 사용자 정보)
+    res.status(200).json({
+      token,
+      student: {
+        student_id: user.student_id,
+        name: user.name,
+      },
+    });
+  } catch (err) {
+    // 예외 처리: 서버 내부 오류
+    console.error('[authController/login] 서버 오류:', err);
+    res.status(500).json({ message: '서버 오류가 발생했습니다.' });
+  }
+}
+]
+
+(4) 사용자 정보 + JWT 토큰 응답 → 프론트에서 쿠키 + localStorage 저장
+[
+→ 쿠키 저장: useCookie('token').value = token;
+→ localStorage 저장: localStorage.setItem('token', token);
+→ userStore.me = 사용자 정보 저장 완료
+→ 페이지 이동: router.push('/schedule');
+]
+
+정리된 핵심 흐름
+→ 쿠키 저장: useCookie('token').value = token;
+→ localStorage 저장: localStorage.setItem('token', token);
+→ userStore.me = 사용자 정보 저장 완료
+→ 페이지 이동: router.push('/schedule');
+
+왜 쿠키랑 localStorage 둘다 저장 했는가?
+useCookie()는 Nuxt SSR 환경에서 로그인 상태 복원 가능
+localStorage는 페이지 새로고침 후 상태 유지를 위해
+
+[3] 사용자가 로그인 시도 (LoginForm.vue)
+입력 → 서버 요청 → 토큰 & 사용자 정보 저장
+
+📁 프론트
+LoginForm.vue → userStore.login() 실행
+
+stores/userStore.js:
+
+fetch('/api/auth/login', { student_id, password })
+
+응답 받으면:
+
+me.value = user
+
+token.value = token
+
+localStorage.setItem('token', token)
+
+useCookie('token').value = token
+
+📁 백엔드
+routes/auth.js: /login → authController.login() 호출
+
+controllers/authController.js:
+
+DB에서 student_id 조회 → bcrypt 비교
+
+성공 시 jwt.sign()으로 토큰 발급 후 JSON 응답
+
+
+
+----------------------------------------------------
+***Nuxt 앱 새로고침 시 로그인 상태 복원 흐름***
+[
+    [Nuxt 앱 실행 시] → plugins/fetchMe.client.js 자동 실행
+                → useCookie('token')으로 쿠키에서 토큰 읽기
+                → 토큰이 존재하면 stores/userStore.js의 fetchMe() 호출
+                → fetchMe() 내부에서 서버로 인증 요청 (/api/auth/me)
+                → 인증 성공 시 me 상태에 사용자 정보 저장
+                → 로그인 상태 복원 완료
+
+]

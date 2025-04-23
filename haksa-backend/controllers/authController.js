@@ -46,6 +46,7 @@ export async function login(req, res) {
   const { student_id, password } = req.body;
 
   try {
+    // 1. 사용자 존재 여부 확인
     // DB에서 student_id로 해당하는 사용자 정보를 찾는 쿼리를 실행한다.
     // findStudentById 함수는 userModel.js에서 정의된 함수이다.
     const user = await findStudentById(student_id);
@@ -54,6 +55,7 @@ export async function login(req, res) {
     if (!user)
       return res.status(401).json({ message: "존재하지 않는 사용자입니다." });
 
+    // 2. 비밀번호 일치 여부 확인
     // 비밀번호가 맞는지 bcrypt로 확인 (DB 비밀번호는 암호화된 상태)
     // bcrypt.compare는 비밀번호를 비교하는 함수이다.
     // 첫 번째 인자는 평문 비밀번호, 두 번째 인자는 암호화된 비밀번호이다.
@@ -64,6 +66,7 @@ export async function login(req, res) {
     if (!isMatch)
       return res.status(401).json({ message: "비밀번호가 일치하지 않습니다." });
 
+    // 3. JWT 토큰 생성
     // 비밀번호가 일치하면 JWT 토큰을 생성한다.
     // jwt.sign은 JWT 토큰을 생성하는 함수이다.
     // 첫 번째 인자는 payload, 두 번째 인자는 비밀 키, 세 번째 인자는 옵션이다.
@@ -75,9 +78,10 @@ export async function login(req, res) {
     const token = jwt.sign(
       { student_id: user.student_id },
       process.env.JWT_SECRET,
-      { expiresIn: "1d" }
+      { expiresIn: "30m" }
     );
 
+    // 4. 응답 반환 (JWT + 사용자 정보)
     // 로그인 성공 시 토큰과 학생 정보를 클라이언트에 반환한다.
     // res.json은 JSON 형식으로 응답을 반환하는 함수이다.
     // 클라이언트는 이 토큰을 저장하고, 이후 요청 시 이 토큰을 서버에 전송한다.
@@ -99,19 +103,40 @@ export async function login(req, res) {
 }
 
 // 로그인 상태 복원용 API
-export function me(req, res) {
+export async function me(req, res) {
   const authHeader = req.headers.authorization;
 
+  // 1. Authorization 헤더가 없거나 형식이 잘못됐을 경우
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ message: '토큰이 없습니다.' });
   }
 
+  // 2. 토큰만 분리
   const token = authHeader.split(' ')[1];
+
   try {
+
+    // 3. JWT 토큰을 디코드하여 student_id 추출
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    // 토큰이 유효하면 사용자 정보 응답 (DB 조회 생략하고 간단하게)
-    return res.json({ student: { student_id: decoded.student_id, name: '테스트 유저' } });
+
+    // 4. student_id로 사용자 정보를 DB에서 조회
+    const user = await findStudentById(decoded.student_id);
+    
+    if(!user) {
+      return res.status(401).json({ message: '존재하지 않는 사용자입니다.' });
+    }
+
+    // 5. 사용자 정보 반환 (프론트에서 사용하는 필드만 선택적으로 응답)
+    return res.json({
+      student: {
+        student_id: user.student_id,
+        name: user.name,
+        name_eng: user.name_eng,     // 예: 영문 이름
+        dept_id: user.dept_id,       // 예: 학과 ID
+      },
+    });
   } catch (err) {
+    console.error('[me] JWT 검증 실패:', err.message);
     return res.status(401).json({ message: '유효하지 않은 토큰입니다.' });
   }
 }
