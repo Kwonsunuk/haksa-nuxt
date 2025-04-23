@@ -42,6 +42,12 @@ import authRouter from './routes/auth.js';
  */
 import scheduleRouter from './routes/schedule.js';
 
+/**
+ * 성적 관련 라우터를 불러온다.
+ * 성적 조회 요청을 처리하는 라우터
+ */
+import gradeRouter from './routes/grade.js';
+
 // .env 파일을 로드하여 환경 변수를 설정한다.
 dotenv.config();
 
@@ -96,6 +102,8 @@ app.use(express.json());
 app.use('/api/auth', authRouter);
 
 app.use('/api/schedule', scheduleRouter)
+
+app.use('/api/grades', gradeRouter);
 
 /**
  * 서버가 실행될 포트를 지정한다.
