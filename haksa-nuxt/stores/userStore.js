@@ -39,7 +39,6 @@ export const useUserStore = defineStore('user', () => {
     // JSON 형태로 응답 바디를 파싱
     // 응답 바디는 { student: { name: '홍길동', student_id: 'S20230001' }, token: 'JWT_TOKEN' } 형태이다.
     const data = await response.json();
-    console.log('[login] data:', data);
 
     // 사용자 정보와 토큰을 반응형 상태로 저장
     me.value = data.student;

@@ -48,6 +48,12 @@ import scheduleRouter from './routes/schedule.js';
  */
 import gradeRouter from './routes/grade.js';
 
+/**
+ * 관리자 관련 라우터를 불러온다.
+ * 관리자 로그인 및 정보 조회 요청을 처리하는 라우터
+ */
+import adminRouter from './routes/admin.js';
+
 // .env 파일을 로드하여 환경 변수를 설정한다.
 dotenv.config();
 
@@ -104,6 +110,8 @@ app.use('/api/auth', authRouter);
 app.use('/api/schedule', scheduleRouter)
 
 app.use('/api/grades', gradeRouter);
+
+app.use('/api/admin', adminRouter);
 
 /**
  * 서버가 실행될 포트를 지정한다.

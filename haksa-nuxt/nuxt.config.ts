@@ -7,5 +7,9 @@ export default defineNuxtConfig({
     'bootstrap/dist/css/bootstrap.min.css',
     'bootstrap-icons/font/bootstrap-icons.css' // 아이콘까지 쓰려면
   ],
-  modules: ['@nuxt/eslint', '@nuxt/icon', '@pinia/nuxt',]
+  modules: ['@nuxt/eslint', '@nuxt/icon', '@pinia/nuxt',],
+  plugins: [
+    '~/plugins/fetchAdmin.client.js',
+    '~/plugins/fetchMe.client.js'
+  ],
 })

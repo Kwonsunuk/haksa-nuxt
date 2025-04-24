@@ -74,5 +74,26 @@ function getClassAt(day, time) {
 .table {
   min-width: 800px;
 }
+
+.table-responsive {
+  overflow: auto;
+}
+
+/* 헤더의 첫 번째 <th>를 왼쪽에 고정 */
+.table thead th:first-child {
+  position: sticky;
+  left: 0;
+  background: #343a40; /* 테이블 헤더 배경색과 동일하게 */
+  color: white;        /* 헤더 글자색 */
+  z-index: 2;          /* 다른 셀 위에 있도록 */
+}
+
+/* 바디의 첫 번째 <td>를 왼쪽에 고정 */
+.table tbody td:first-child {
+  position: sticky;
+  left: 0;
+  background: white;  /* 스크롤해도 뒤쪽이 비치지 않도록 */
+  z-index: 1;
+}
 </style>
 

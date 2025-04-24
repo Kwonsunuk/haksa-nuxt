@@ -1,68 +1,130 @@
+
 <!-- components/LoginForm.vue -->
 <template>
-  <!-- 
-   <form>: 사용자 입력을 제출하는 영역
-    @submit: 제출 이벤트 발생 시 실행
-    .prevent: 기본 동작(페이지 새로고침)을 막고 login() 함수만 실행 -->
-  <form type="submit" @submit.prevent="login" class="mb-4 p-3 border rounded bg-light">
-    <div class="mb-2">
-      <input v-model="student_id" class="form-control" placeholder="학번" />
+  <div class="login-form-wrapper">
+    <!-- 토글 버튼 (원하시면 화살표 대신 반원 트리거에 걸어도 됩니다) -->
+    <div class="toggle-trigger" @click="showAdmin = !showAdmin">
+      {{ showAdmin ? '학생 로그인으로 돌아가기' : '관리자 로그인하기' }}
     </div>
-    <div class="mb-2">
-      <input v-model="password" type="password" class="form-control" placeholder="비밀번호" />
-    </div>
-    <!-- ✅ 에러 메시지 영역: 에러가 있을 경우에만 표시 -->
-    <div v-if="errorMessage" class="text-danger mb-2">
-      {{ errorMessage }}
-    </div>
-    <!-- ✅ 로딩 중엔 버튼 비활성화 -->
-    <button type="submit" class="btn btn-primary w-100" :disabled="isLoading">
-      {{ isLoading ? '로그인 중...' : '로그인' }}
-    </button>
-  </form>
+
+    <!-- 폼 자체를 슬라이드 아웃·인 시킵니다 -->
+    <transition name="slide-form" mode="out-in">
+      <!-- 학생 로그인 -->
+      <form
+        v-if="!showAdmin"
+        key="student"
+        @submit.prevent="login"
+        class="mb-4 p-3 border rounded bg-light"
+      >
+        <div class="mb-2">
+          <input v-model="student_id" class="form-control" placeholder="학번" />
+        </div>
+        <div class="mb-2">
+          <input
+            v-model="password"
+            type="password"
+            class="form-control"
+            placeholder="비밀번호"
+          />
+        </div>
+        <div v-if="errorMessage" class="text-danger mb-2">
+          {{ errorMessage }}
+        </div>
+        <button
+          type="submit"
+          class="btn btn-primary w-100"
+          :disabled="isLoading"
+        >
+          {{ isLoading ? '로그인 중...' : '로그인' }}
+        </button>
+      </form>
+
+      <!-- 관리자 로그인 -->
+      <AdminLoginForm v-else key="admin" />
+    </transition>
+  </div>
 </template>
 
 <script setup>
-// Vue 3 Composition API의 ref를 불러옴. - 반응형 변수 생성(v-model과 바인딩하기 위해 필요)
-import { ref } from 'vue';
-import { useUserStore } from '~/stores/userStore'; // Pinia 스토어 가져오기
-// 라우팅을 위한 Nuxt 내부 라우터 객체 불러오기 - 로그인 성공 후 페이지 이동에 사용
-import { useRouter } from 'vue-router'; // Vue Router 가져오기
+import { ref } from 'vue'
+import { useUserStore } from '~/stores/userStore'
+import { useRouter } from 'vue-router'
+import AdminLoginForm from './AdminLoginForm.vue'
 
-// 로그인 입력 값을 위한 상태 변수 정의
-const student_id = ref('');
-const password = ref('');
+const student_id   = ref('')
+const password     = ref('')
+const isLoading    = ref(false)
+const errorMessage = ref('')
+const showAdmin    = ref(false)
 
-const userStore = useUserStore(); // Pinia 스토어 인스턴스 생성
-const router = useRouter(); // Vue Router 인스턴스 생성
+const userStore = useUserStore()
+const router    = useRouter()
 
-// 로딩 상태와 에러 메시지를 위한 상태 변수 정의
-const isLoading = ref(false); // 로딩 상태
-const errorMessage = ref(''); // 에러 메시지
-
-// 로그인 함수
 async function login() {
-  errorMessage.value = ''; // 에러 메시지 초기화
-  isLoading.value = true; // 로딩 상태 시작
-
-  // 입력값 유효성 검사
+  errorMessage.value = ''
+  isLoading.value   = true
   if (!student_id.value || !password.value) {
-    alert('아이디와 비밀번호를 입력하세요.');
-    return;
+    errorMessage.value = '아이디와 비밀번호를 입력하세요.'
+    isLoading.value = false
+    return
   }
-
   try {
-    await userStore.login(student_id.value, password.value); // Pinia 스토어의 login 함수 호출
-    alert('로그인 성공!'); // 로그인 성공 시 알림
-    router.push('/schedule'); // 로그인 성공 후 메인 페이지로 이동
-  } catch (error) {
-    errorMessage.value = error.message || '로그인에 실패했습니다.'; // 에러 메시지 설정
-    alert('로그인 실패: ' + error.message); // 로그인 실패 시 알림
+    await userStore.login(student_id.value, password.value)
+    router.push('/schedule')
+  } catch (err) {
+    errorMessage.value = err.message || '로그인에 실패했습니다.'
   } finally {
-    isLoading.value = false; // 로딩 상태 종료
+    isLoading.value = false
   }
 }
 </script>
+
+<style scoped>
+.login-form-wrapper {
+  padding: 0 0px;  /* 좌우 약간의 여유 */
+}
+.login-form-wrapper form {
+  width: 100%;
+  max-width: 360px;
+  margin: 0 auto;
+}
+
+@media (max-width: 768px) and (orientation: landscape) {
+  .login-form-wrapper form {
+    max-width: 80%;
+  }
+}
+
+
+
+/* 토글 텍스트 */
+.toggle-trigger {
+  text-align: right;
+  margin-bottom: 8px;
+  cursor: pointer;
+  color: #007bff;
+  user-select: none;
+}
+
+/* 슬라이드 트랜지션 */
+.slide-form-enter-active,
+.slide-form-leave-active {
+  transition: transform 0.3s ease;
+}
+.slide-form-enter-from {
+  transform: translateX(100%);
+}
+.slide-form-enter-to {
+  transform: translateX(0);
+}
+.slide-form-leave-from {
+  transform: translateX(0);
+}
+.slide-form-leave-to {
+  transform: translateX(-100%);
+}
+</style>
+
 
 <!-- 
 - mb-4 : margin-bottom 4단계
