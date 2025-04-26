@@ -131,6 +131,7 @@ function formatDate(dateStr) {
   });
 }
 
+// 공지사항 목록을 가져오는 API 호출
 async function fetchNotices() {
   const token = authToken;
   // 검색어가 있으면 q 파라미터 추가
@@ -153,11 +154,57 @@ async function fetchNotices() {
   totalPages.value = tp;
 }
 
+// 삭제 API 호출
+async function onDelete(id) {
+  if (!confirm('정말 삭제하시겠습니까?')) return;
+
+  try {
+    await fetch(`http://localhost:4000/api/admin/announcements/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${useCookie('admin_token').value}`,
+      },
+    });
+    // 성공하면 로컬 리스트 갱신
+    notices.value = notices.value.filter((notice) => notice.announcement_id !== id);
+  } catch (err) {
+    alert('공지사항 삭제에 실패했습니다.');
+    console.error(err);
+  }
+}
+// 수정 API 호출
+async function onEdit(notice) {
+  const title = prompt('공지사항 제목을 입력하세요', notice.title);
+  if (!title) return;
+
+  const content = prompt('공지사항 내용을 입력하세요', notice.content);
+  if (!content) return;
+
+  try {
+    await fetch(`http://localhost:4000/api/admin/announcements/${notice.announcement_id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${useCookie('admin_token').value}`,
+      },
+      body: JSON.stringify({ title, content }),
+    });
+    // 성공하면 로컬 리스트 갱신
+    notice.title = title;
+    notice.content = content;
+  } catch (err) {
+    alert('공지사항 수정에 실패했습니다.');
+    console.error(err);
+  }
+}
+// 검색 API 호출
 function onSearch() {
   page.value = 1; // 검색할 때는 1페이지로 리셋
   fetchNotices();
 }
 
+// 페이지 변경 
 function changePage(p) {
   if (p < 1 || p > totalPages.value) return;
   page.value = p;

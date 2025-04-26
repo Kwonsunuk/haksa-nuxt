@@ -100,13 +100,23 @@ export async function fetchAllAnnouncements(page = 1, size = 10, q = '') {
   return { rows, totalCount };
 }
 
-
+// 공지사항 공개/비공개(관리자용)
 export async function updateAnnouncementVisibility(id, isVisible) {
   const [result] = await pool.execute(
     `UPDATE Announcement
        SET is_visible = ?
      WHERE announcement_id = ?`,
     [isVisible ? 1 : 0, id]
+  );
+  return result.affectedRows;
+}
+
+// 공지사항 삭제(관리자용)
+export async function deleteModelAnnouncement(id) {
+  const [result] = await pool.execute(
+    `DELETE FROM Announcement
+     WHERE announcement_id = ?`,
+    [id]
   );
   return result.affectedRows;
 }
