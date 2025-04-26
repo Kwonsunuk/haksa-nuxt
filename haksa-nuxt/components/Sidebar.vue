@@ -4,9 +4,7 @@
     <!--- container : Bootstrap에서 반응형 중앙 정렬 + padding이 기본 적용되는 컨테이너 -->
     <!-- 로그인 전 -->
     <LoginForm v-if="!userStore.me && !adminStore.me" />
-    <!-- 로그인 입력 폼 렌더링하는 컴포넌트 -->
 
-    <!-- 로그인 후 -->
     <!-- 학생 로그인 후 -->
     <div v-else-if="userStore.me" class="mb-4 p-3 border rounded bg-light">
       <p>
@@ -35,9 +33,10 @@
     </div>
     <div v-else-if="adminStore.me">
       <!-- 관리자 전용 메뉴 -->
-      <NuxtLink to="/admin/announcements" class="btn btn-primary mb-2 w-100"
+      <NuxtLink to="/notice" class="btn btn-primary mb-2 w-100"
         >📝 공지사항 관리</NuxtLink
       >
+      <NuxtLink to="/" class="btn btn-primary mb-2 w-100">공지사항 작성</NuxtLink>
       <!-- 필요에 따라 더 관리자 메뉴 추가 -->
     </div>
   </div>

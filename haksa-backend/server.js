@@ -120,6 +120,8 @@ app.use('/api/admin', adminRouter);
 
 app.use('/api/announcements', announcementRouter);
 
+app.use('/api/admin/announcements', announcementRouter)
+
 /**
  * 서버가 실행될 포트를 지정한다.
  * process.env.PORT는 환경 변수에서 포트를 가져온다.

@@ -34,7 +34,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   // ——————————————————————  
   // 3) 페이지 보호
   // ——————————————————————
-  const studentOnly = ['/schedule', '/transcript', '/tuition', '/notice']
+  const studentOnly = ['/schedule', '/transcript', '/tuition']
   const adminOnly   = ['/admin', '/admin/announcements']
 
   // 학생 전용 페이지 접근 제어
