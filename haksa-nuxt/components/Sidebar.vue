@@ -1,6 +1,6 @@
 <!-- components/Sidebar.vue -->
 <template>
-  <div class="container">
+  <div class="container sticky-top" style="top: 90px">
     <!--- container : Bootstrap에서 반응형 중앙 정렬 + padding이 기본 적용되는 컨테이너 -->
     <!-- 로그인 전 -->
     <LoginForm v-if="!userStore.me && !adminStore.me" />

@@ -1,24 +1,52 @@
-import { useUserStore } from '../stores/userStore'; // Pinia 스토어에서 useUserStore를 가져온다.
-import { navigateTo } from 'nuxt/app'; // Nuxt의 navigateTo 함수를 가져온다.
+// middleware/auth.global.js
+import { useUserStore } from '~/stores/userStore'
+import { useAdminStore } from '~/stores/adminStore'
+import { useCookie } from '#app'
+import { navigateTo } from 'nuxt/app'
 
-// Nuxt에서 global middleware는 모든 페이지 이동 시 실행된다
 export default defineNuxtRouteMiddleware(async (to, from) => {
-  // 클라이언트 환경에서만 실행
-  if (!import.meta.client) return;
+  // 클라이언트 전용
+  if (!import.meta.client) return
 
-  const userStore = useUserStore();
+  const userStore = useUserStore()
+  const adminStore = useAdminStore()
 
-  // 이미 로그인 되어 있다면 아무것도 하지 않음
-  if (userStore.me) return;
-
-  const token = localStorage.getItem('token');
-  if (token) {
-    await userStore.fetchMe(); // 사용자 상태 복구 시도
+  // ——————————————————————  
+  // 1) 학생 인증 복구
+  // ——————————————————————
+  if (!userStore.me) {
+    const token = useCookie('token').value
+    if (token) {
+      await userStore.fetchMe()
+    }
   }
 
-  // 로그인 안 된 상태에서 보호된 페이지로 이동할 경우 홈으로 돌려보냄
-  const protectedPages = ['/schedule', '/transcript', '/tuition'];
-  if (protectedPages.includes(to.path) && !userStore.me) {
-    return navigateTo('/'); // 로그인 상태 아니면 홈으로
+  // ——————————————————————  
+  // 2) 관리자 인증 복구
+  // ——————————————————————
+  if (!adminStore.me) {
+    const adminToken = useCookie('admin_token').value
+    if (adminToken) {
+      await adminStore.fetchMe()
+    }
   }
-});
+
+  // ——————————————————————  
+  // 3) 페이지 보호
+  // ——————————————————————
+  const studentOnly = ['/schedule', '/transcript', '/tuition', '/notice']
+  const adminOnly   = ['/admin', '/admin/announcements']
+
+  // 학생 전용 페이지 접근 제어
+  if (studentOnly.includes(to.path) && !userStore.me) {
+    return navigateTo('/')
+  }
+
+  // 관리자 전용 페이지 접근 제어
+  if (adminOnly.some(p => to.path.startsWith(p)) && !adminStore.me) {
+    return navigateTo('/admin/login')
+  }
+
+  // 모두 통과하면 아무 동작 없이 내비게이션 계속
+})
+

@@ -1,8 +1,11 @@
-GET http://localhost:4000/api/schedule?year=2024&term=SPRING
+GET http://localhost:4000/api/announcements
 Authorization: Bearer yJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdHVkZW50X2lkIjoiUzIwMjMwMDAxIiwiaWF0IjoxNzQ1NDAzODk1LCJleHAiOjE3NDU0MDU2OTV9.L8Sn2bU7btQNBQZyxb0yUvI0CEvHbxdyv3QlGDcQO0k
 
+# GET http://localhost:4000/api/schedule?year=2024&term=SPRING
+# Authorization: Bearer yJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdHVkZW50X2lkIjoiUzIwMjMwMDAxIiwiaWF0IjoxNzQ1NDAzODk1LCJleHAiOjE3NDU0MDU2OTV9.L8Sn2bU7btQNBQZyxb0yUvI0CEvHbxdyv3QlGDcQO0k
 
 
-GET http://localhost:4000/api/grades?year=2024&term=SPRING
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdHVkZW50X2lkIjoiUzIwMjMwMDAxIiwiaWF0IjoxNzQ1NDAzODk1LCJleHAiOjE3NDU0MDU2OTV9.L8Sn2bU7btQNBQZyxb0yUvI0CEvHbxdyv3QlGDcQO0k
+
+# GET http://localhost:4000/api/grades?year=2024&term=SPRING
+# Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdHVkZW50X2lkIjoiUzIwMjMwMDAxIiwiaWF0IjoxNzQ1NDAzODk1LCJleHAiOjE3NDU0MDU2OTV9.L8Sn2bU7btQNBQZyxb0yUvI0CEvHbxdyv3QlGDcQO0k
 

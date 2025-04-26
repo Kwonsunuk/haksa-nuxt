@@ -54,6 +54,11 @@ import gradeRouter from './routes/grade.js';
  */
 import adminRouter from './routes/admin.js';
 
+/**
+ * 공지사항 관련 라우터를 불러온다.
+ */
+import announcementRouter from './routes/announcement.js';
+
 // .env 파일을 로드하여 환경 변수를 설정한다.
 dotenv.config();
 
@@ -112,6 +117,8 @@ app.use('/api/schedule', scheduleRouter)
 app.use('/api/grades', gradeRouter);
 
 app.use('/api/admin', adminRouter);
+
+app.use('/api/announcements', announcementRouter);
 
 /**
  * 서버가 실행될 포트를 지정한다.

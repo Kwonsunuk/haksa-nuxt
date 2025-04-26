@@ -40,7 +40,7 @@
     <div class="container" style="padding-top: 90px">
       <div class="row gx-0">
         <div class="col-md-3 mb-4">
-          <Sidebar />
+            <Sidebar />
         </div>
         <div class="col-md-9">
           <NuxtPage />
