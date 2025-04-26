@@ -120,3 +120,14 @@ export async function deleteModelAnnouncement(id) {
   );
   return result.affectedRows;
 }
+
+// 공지사항 수정(관리자용)
+export async function updateModelAnnouncement(id, title, content) {
+  const [result] = await pool.execute(
+    `UPDATE Announcement
+       SET title = ?, content = ?
+       WHERE announcement_id = ?`,
+       [title, content, id]
+  );
+  return result.affectedRows;
+};

@@ -40,7 +40,12 @@
                 >
                   {{ notice.is_visible ? '비공개하기' : '공개하기' }}
                 </button> -->
-                <button class="btn btn-sm btn-danger" @click.stop="onDelete(notice.announcement_id)">삭제</button>
+                <button
+                  class="btn btn-sm btn-danger"
+                  @click.stop="onDelete(notice.announcement_id)"
+                >
+                  삭제
+                </button>
                 <button class="btn btn-sm btn-secondary" @click.stop="onEdit(notice)">수정</button>
                 <button
                   class="btn btn-sm btn-{{ notice.is_visible ? 'warning' : 'success' }}"
@@ -65,7 +70,7 @@
         <!-- 내용 아코디언 -->
         <transition name="collapse">
           <div v-show="expandedItems.has(notice.announcement_id)" class="mt-2">
-            <p class="mb-0">{{ notice.content }}</p>
+            <p class="mb-0 preserve-whitespace">{{ notice.content }}</p>
           </div>
         </transition>
       </li>
@@ -96,6 +101,8 @@
       </ul>
     </nav>
   </div>
+  <!-- 모달 삽입 -->
+  <EditAnnouncementModal v-model="showEditModal" :announcement="editingNotice" @save="handleSave" />
 </template>
 
 <script setup>
@@ -103,6 +110,8 @@ import { ref, onMounted, computed } from 'vue';
 import { useCookie } from '#app';
 
 import { useAdminStore } from '~/stores/adminStore';
+
+import EditAnnouncementModal from '~/components/EditAnnouncementModal.vue';
 
 const adminStore = useAdminStore();
 const isAdmin = computed(() => !!adminStore.me); // 관리자 로그인 여부
@@ -112,6 +121,9 @@ const page = ref(1);
 const size = 10;
 const totalPages = ref(1);
 const searchTerm = ref(''); // 검색어
+
+const showEditModal = ref(false);
+const editingNotice = ref({});
 
 // 학생용 토큰, 관리자용 토큰 둘 다 확인
 const studentToken = useCookie('token').value;
@@ -173,29 +185,28 @@ async function onDelete(id) {
     console.error(err);
   }
 }
-// 수정 API 호출
-async function onEdit(notice) {
-  const title = prompt('공지사항 제목을 입력하세요', notice.title);
-  if (!title) return;
+// 수정 버튼 클릭 시
+function onEdit(notice) {
+  editingNotice.value = { ...notice };
+  showEditModal.value = true;
+}
 
-  const content = prompt('공지사항 내용을 입력하세요', notice.content);
-  if (!content) return;
-
-  try {
-    await fetch(`http://localhost:4000/api/admin/announcements/${notice.announcement_id}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${useCookie('admin_token').value}`,
-      },
-      body: JSON.stringify({ title, content }),
-    });
-    // 성공하면 로컬 리스트 갱신
-    notice.title = title;
-    notice.content = content;
-  } catch (err) {
-    alert('공지사항 수정에 실패했습니다.');
-    console.error(err);
+// 모달에서 저장 눌렀을 때
+async function handleSave(updated) {
+  // 예: PATCH 요청 보내고
+  await fetch(`http://localhost:4000/api/admin/announcements/${updated.announcement_id}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${useCookie('admin_token').value}`,
+    },
+    body: JSON.stringify({ title: updated.title, content: updated.content }),
+  });
+  // 로컬 리스트 업데이트
+  const idx = notices.value.findIndex((n) => n.announcement_id === updated.announcement_id);
+  if (idx !== -1) {
+    notices.value[idx].title = updated.title;
+    notices.value[idx].content = updated.content;
   }
 }
 // 검색 API 호출
@@ -204,7 +215,7 @@ function onSearch() {
   fetchNotices();
 }
 
-// 페이지 변경 
+// 페이지 변경
 function changePage(p) {
   if (p < 1 || p > totalPages.value) return;
   page.value = p;
@@ -267,5 +278,10 @@ onMounted(fetchNotices);
 .collapse-leave-from {
   max-height: 500px; /* 충분히 큰 값 */
   opacity: 1;
+}
+
+/* 줄바꿈 및 공백을 그대로 유지 */
+.preserve-whitespace {
+  white-space: pre-wrap;
 }
 </style>

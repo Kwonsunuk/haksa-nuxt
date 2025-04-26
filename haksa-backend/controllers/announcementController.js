@@ -4,6 +4,7 @@ import {
   fetchAnnouncements,
   updateAnnouncementVisibility,
   deleteModelAnnouncement,
+  updateModelAnnouncement,
 } from "../models/announcementModel.js";
 
 export async function getAnnouncements(req, res) {
@@ -86,3 +87,29 @@ export async function deleteAnnouncement(req, res) {
     return res.status(500).json({ message: "공지사항 삭제 실패" });
   }
 }
+
+/**
+ * PATCH /api/announcements/:id
+ * 관리자만 호출 가능 (authAdminMiddleware 적용)
+ * req.params.id 에 해당 공지 ID,
+ * req.body.title, req.body.content 에 새 제목과 내용
+ */
+export async function updateAnnouncement(req, res) {
+  const id = parseInt(req.params.id, 10);
+  const { title, content } = req.body;
+
+  if(!title || !content) {
+    return res.status(400).json({ message: "제목과 내용을 모두 입력해야 합니다." });
+  }
+
+  try {
+    const affected = await updateModelAnnouncement(id, title, content);
+    if (affected === 0) {
+      return res.status(404).json({ message: "해당 공지를 찾을 수 없습니다." });
+    }
+    return res.json({ message: "공지사항이 수정되었습니다." });
+  } catch (error) {
+    console.error("[updateAnnouncement] 에러:", error);
+    return res.status(500).json({ message: "공지사항 수정 실패" });
+  }
+};
