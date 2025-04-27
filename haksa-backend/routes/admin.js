@@ -1,14 +1,14 @@
 // routes/admin.js
-
 import express from 'express';
-import { loginAdmin, meAdmin } from '../controllers/adminAuthController.js'
-
+import { authAdminMiddleware } from '../middleware/authAdminMiddleware.js';
+import { loginAdmin, meAdmin } from '../controllers/adminAuthController.js';
 
 const router = express.Router();
 
-// 관리자 로그인 API
+// POST /api/admin/login — 관리자 로그인
 router.post('/login', loginAdmin);
-// 관리자 정보 조회 API
-router.get('/me', meAdmin);
+
+// GET  /api/admin/me    — 토큰으로 관리자 정보 복원 (인증 필요)
+router.get('/me', authAdminMiddleware, meAdmin);
 
 export default router;
