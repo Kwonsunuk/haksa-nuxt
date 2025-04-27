@@ -52,13 +52,20 @@
 </template>
 
 <script setup>
-import Sidebar from '~/components/Sidebar.vue';
-
+import { onBeforeUnmount } from 'vue';
 import { useUserStore } from '~/stores/userStore';
-
+import { useAdminStore } from '~/stores/adminStore';
+import { useToastStore } from '~/stores/toastStore';
+import Sidebar from '~/components/Sidebar.vue';
 import ToastContainer from '~/components/ToastContainer.vue';
 
 const userStore = useUserStore();
+const adminStore = useAdminStore();
+const toastStore = useToastStore();
+
+onBeforeUnmount(() => {
+  toastStore.clearAll();
+});
 </script>
 <style scoped>
 .navbar-brand {
