@@ -10,7 +10,7 @@ export const useToastStore = defineStore('toast', () => {
 
   function addToast(type, message, duration = 3000) {
     const id = ++counter;
-    toasts.value.push({ id, type, message });
+    toasts.value.push({ id, type, message, duration });
     // 타이머 등록
     const timeoutId = setTimeout(() => removeToast(id), duration)
     timers.set(id, timeoutId)
