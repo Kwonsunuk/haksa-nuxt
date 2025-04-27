@@ -1,57 +1,58 @@
-// stores/adminStore.js
-import { defineStore } from 'pinia'
-import { ref } from 'vue'
-import { useCookie } from '#app'
+// haksa-nuxt/stores/adminStore.js
+import { defineStore } from 'pinia';
+import { ref } from 'vue';
+import { useCookie } from '#app';
 
 export const useAdminStore = defineStore('admin', () => {
-  const me    = ref(null)
-  const token = ref(null)
+  const me = ref(null);
+  const token = ref(null);
 
+  // 관리자 로그인
   async function login(userId, password) {
     const res = await fetch('http://localhost:4000/api/admin/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ user_id: userId, password })
-    })
+      body: JSON.stringify({ user_id: userId, password }),
+    });
     if (!res.ok) {
-      const err = await res.json().catch(() => null)
-      throw new Error(err?.message || '관리자 로그인 실패')
+      const err = await res.json().catch(() => null);
+      throw new Error(err?.message || '관리자 로그인 실패');
     }
-    const data = await res.json()
-    me.value    = data.admin
-    token.value = data.token
-    // 쿠키에도 저장
-    useCookie('admin_token', { sameSite: 'strict' }).value = data.token
-    localStorage.setItem('admin_token', data.token)
+    const { admin, token: t } = await res.json();
+    me.value = admin;
+    token.value = t;
+
+    // 쿠키에도 저장 (sameSite·secure 권장)
+    useCookie('admin_token', { sameSite: 'strict', secure: true }).value = t;
+    localStorage.setItem('admin_token', t);
   }
 
-  // ★ 새로고침 시 토큰으로 상태 복원
+  // 페이지 새로고침 시 토큰으로 상태 복원
   async function fetchMe() {
-    console.log('[fetchMe] called');
-    const cookieToken = useCookie('admin_token').value
-    if (!cookieToken) return
+    if (process.server) return;
+    const saved = useCookie('admin_token').value;
+    if (!saved) return;
 
     try {
       const res = await fetch('http://localhost:4000/api/admin/me', {
-        headers: { Authorization: `Bearer ${cookieToken}` }
-      })
-      if (!res.ok) throw new Error('인증 실패')
-      const data = await res.json()
-      me.value    = data.admin
-      token.value = cookieToken
+        headers: { Authorization: `Bearer ${saved}` },
+      });
+      if (!res.ok) throw new Error('인증 실패');
+      const { admin } = await res.json();
+      me.value = admin;
+      token.value = saved;
     } catch {
-      logout()
+      logout();
     }
   }
 
+  // 로그아웃
   function logout() {
-    me.value    = null
-    token.value = null
-    useCookie('admin_token').value = null
-    localStorage.removeItem('admin_token')
+    me.value = null;
+    token.value = null;
+    useCookie('admin_token').value = null;
+    localStorage.removeItem('admin_token');
   }
 
-  return { me, token, login, fetchMe, logout }
-})
-
-
+  return { me, token, login, fetchMe, logout };
+});

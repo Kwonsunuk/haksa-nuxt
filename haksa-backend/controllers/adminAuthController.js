@@ -44,7 +44,7 @@ export async function loginAdmin(req, res) {
 
   // 5. 비밀번호가 일치하면 JWT 토큰을 생성한다.
   const token = jwt.sign(
-    { admin_id: admin.admin_id, user_id: admin.user_id },
+    { admin_id: admin.admin_id, user_id: admin.user_id,   name: admin.name},
     process.env.JWT_SECRET,
     { expiresIn: "1h" } // 1시간 후 만료
   );
@@ -83,6 +83,7 @@ export function meAdmin(req, res) {
       admin: {
         admin_id: decoded.admin_id,
         user_id: decoded.user_id,
+        name: decoded.name,
       },
     });
   } catch (error) {
