@@ -7,18 +7,22 @@ import jwt from 'jsonwebtoken';
  */
 export function authAdminMiddleware(req, res, next) {
   const authHeader = req.headers.authorization;
-  if (!authHeader?.startsWith('Bearer ')) {
+  if (!authHeader) {
     return res.status(401).json({ message: '관리자 토큰이 없습니다.' });
   }
-  const token = authHeader.split(' ')[1];
+
+  const [scheme, token] = authHeader.split(' ');
+  if (scheme !== 'Bearer' || !token) {
+    return res.status(401).json({ message: '유효한 Bearer 토큰 형식이 아닙니다.' });
+  }
+
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     if (!decoded.admin_id) {
       return res.status(403).json({ message: '관리자 전용 기능입니다.' });
     }
-    // 인증이 성공하면 req.admin에 인증 정보 추가
     req.admin = { admin_id: decoded.admin_id, user_id: decoded.user_id };
-    next();
+    return next();
   } catch (err) {
     return res.status(401).json({ message: '유효하지 않은 관리자 토큰입니다.' });
   }
