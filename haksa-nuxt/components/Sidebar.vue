@@ -56,7 +56,7 @@ const toastStore = useToastStore();
 function onLogout() {
   userStore.logout(); // Pinia 스토어의 logout 함수 호출
   adminStore.logout(); // 관리자 스토어의 logout 함수 호출
-  toastStore.push('로그아웃 되었습니다.', 'default'); // 로그아웃 알림
+  toastStore.addToast('default', '로그아웃 되었습니다.', 3000); // 로그아웃 알림
   router.push('/'); // 로그아웃 후 메인 페이지로 이동
 }
 </script>
