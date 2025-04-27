@@ -1,21 +1,22 @@
 // stores/toastStore.js
-import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { defineStore } from 'pinia';
+import { ref } from 'vue';
 
+// Toast 타입: 'success' | 'error' | 'warning' | 'default'
 export const useToastStore = defineStore('toast', () => {
-  const toasts = ref([])        // [{ id, message, type }]
+  const toasts = ref([]); // {id: number, type: string, message: string}[]
   const timers = new Map()      // Map<toastId, timeoutId>
+  let counter = 0;
 
-  function addtoast(message, type = 'default', duration = 3000) {
-    const id = Date.now() + Math.random()
-    toasts.value.push({ id, message, type })
-
+  function addToast(type, message, duration = 3000) {
+    const id = ++counter;
+    toasts.value.push({ id, type, message });
     // 타이머 등록
-    const timeoutId = setTimeout(() => remove(id), duration)
+    const timeoutId = setTimeout(() => removeToast(id), duration)
     timers.set(id, timeoutId)
   }
 
-  function remove(id) {
+  function removeToast(id) {
     // 타이머 해제
     const timeoutId = timers.get(id)
     if (timeoutId) {
@@ -35,5 +36,5 @@ export const useToastStore = defineStore('toast', () => {
     toasts.value = []
   }
 
-  return { toasts, addtoast, remove, clearAll }
-})
+  return { toasts, addToast, removeToast, clearAll };
+});
