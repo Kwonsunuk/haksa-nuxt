@@ -10,6 +10,6 @@ export default defineNuxtConfig({
   modules: ['@nuxt/eslint', '@nuxt/icon', '@pinia/nuxt',],
   plugins: [
     '~/plugins/fetchAdmin.client.js',
-    '~/plugins/fetchMe.client.js'
+    '~/plugins/fetchMe.client.js',
   ],
 })

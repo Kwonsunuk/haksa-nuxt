@@ -23,7 +23,6 @@
   </div>
 </template>
 
-
 <script setup>
 import { ref, onMounted } from 'vue';
 import ScheduleTable from '~/components/ScheduleTable.vue';
@@ -77,4 +76,3 @@ async function fetchSchedule() {
 
 onMounted(fetchSchedule);
 </script>
-

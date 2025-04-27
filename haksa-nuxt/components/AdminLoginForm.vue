@@ -23,6 +23,7 @@
 import { ref } from 'vue';
 import { useAdminStore } from '~/stores/adminStore';
 import { useRouter } from 'vue-router';
+import { useNuxtApp } from '#app';
 
 const userId = ref(''); // user_id 에 바인딩
 const password = ref('');
@@ -31,6 +32,8 @@ const isLoading = ref(false);
 
 const adminStore = useAdminStore();
 const router = useRouter();
+
+const { $toast } = useNuxtApp();
 
 async function loginAdmin() {
   errorMessage.value = '';
@@ -45,9 +48,11 @@ async function loginAdmin() {
   try {
     await adminStore.login(userId.value, password.value);
     router.push('');
+    $toast.default(`${userStore.me.name} 관리자님 환영합니다!`);
     // /admin/announcements
   } catch (err) {
     errorMessage.value = err.message || '관리자 로그인에 실패했습니다.';
+    $toast.error(errorMessage.value);
   } finally {
     isLoading.value = false;
   }

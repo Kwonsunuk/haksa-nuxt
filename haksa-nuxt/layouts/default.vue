@@ -40,7 +40,7 @@
     <div class="container" style="padding-top: 90px">
       <div class="row gx-0">
         <div class="col-md-3 mb-4">
-            <Sidebar />
+          <Sidebar />
         </div>
         <div class="col-md-9">
           <NuxtPage />
@@ -48,6 +48,7 @@
       </div>
     </div>
   </div>
+  <ToastContainer />
 </template>
 
 <script setup>
@@ -55,7 +56,7 @@ import Sidebar from '~/components/Sidebar.vue';
 
 import { useUserStore } from '~/stores/userStore';
 
-import { useAsyncData } from '#app';
+import ToastContainer from '~/components/ToastContainer.vue';
 
 const userStore = useUserStore();
 </script>

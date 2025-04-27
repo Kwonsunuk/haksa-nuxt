@@ -1,13 +1,12 @@
-
 <!-- components/LoginForm.vue -->
 <template>
   <div class="login-form-wrapper">
-    <!-- 토글 버튼 (원하시면 화살표 대신 반원 트리거에 걸어도 됩니다) -->
+    <!-- 토글 버튼 -->
     <div class="toggle-trigger" @click="showAdmin = !showAdmin">
       {{ showAdmin ? '학생 로그인으로 돌아가기' : '관리자 로그인하기' }}
     </div>
 
-    <!-- 폼 자체를 슬라이드 아웃·인 시킵니다 -->
+    <!-- 폼 슬라이드 전환 -->
     <transition name="slide-form" mode="out-in">
       <!-- 학생 로그인 -->
       <form
@@ -20,21 +19,12 @@
           <input v-model="student_id" class="form-control" placeholder="학번" />
         </div>
         <div class="mb-2">
-          <input
-            v-model="password"
-            type="password"
-            class="form-control"
-            placeholder="비밀번호"
-          />
+          <input v-model="password" type="password" class="form-control" placeholder="비밀번호" />
         </div>
         <div v-if="errorMessage" class="text-danger mb-2">
           {{ errorMessage }}
         </div>
-        <button
-          type="submit"
-          class="btn btn-primary w-100"
-          :disabled="isLoading"
-        >
+        <button type="submit" class="btn btn-primary w-100" :disabled="isLoading">
           {{ isLoading ? '로그인 중...' : '로그인' }}
         </button>
       </form>
@@ -46,42 +36,49 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { useUserStore } from '~/stores/userStore'
-import { useRouter } from 'vue-router'
-import AdminLoginForm from './AdminLoginForm.vue'
+import { ref } from 'vue';
+import { useUserStore } from '~/stores/userStore';
+import { useRouter } from 'vue-router';
+import { useToastStore } from '~/stores/toastStore';
+import AdminLoginForm from './AdminLoginForm.vue';
 
-const student_id   = ref('')
-const password     = ref('')
-const isLoading    = ref(false)
-const errorMessage = ref('')
-const showAdmin    = ref(false)
+const student_id = ref('');
+const password = ref('');
+const isLoading = ref(false);
+const errorMessage = ref('');
+const showAdmin = ref(false);
 
-const userStore = useUserStore()
-const router    = useRouter()
+const userStore = useUserStore();
+const router = useRouter();
+const toastStore = useToastStore();
 
 async function login() {
-  errorMessage.value = ''
-  isLoading.value   = true
+  errorMessage.value = '';
+  isLoading.value = true;
+
   if (!student_id.value || !password.value) {
-    errorMessage.value = '아이디와 비밀번호를 입력하세요.'
-    isLoading.value = false
-    return
+    errorMessage.value = '아이디와 비밀번호를 입력하세요.';
+    isLoading.value = false;
+    return;
   }
+
   try {
-    await userStore.login(student_id.value, password.value)
-    router.push('/schedule')
+    await userStore.login(student_id.value, password.value);
+    // 로그인 성공
+    toastStore.addToast('success', `만나서 반갑습니다, ${userStore.me.name}님!`, 4000);
+    await router.push('/schedule');
   } catch (err) {
-    errorMessage.value = err.message || '로그인에 실패했습니다.'
+    errorMessage.value = err.message || '로그인에 실패했습니다.';
+    toastStore.addToast('warning', '로그인에 실패했습니다.', 4000);
   } finally {
-    isLoading.value = false
+    isLoading.value = false;
   }
 }
 </script>
 
 <style scoped>
 .login-form-wrapper {
-  padding: 0 0px;  /* 좌우 약간의 여유 */
+  padding: 0;
 }
 .login-form-wrapper form {
   width: 100%;
@@ -94,8 +91,6 @@ async function login() {
     max-width: 80%;
   }
 }
-
-
 
 /* 토글 텍스트 */
 .toggle-trigger {
@@ -124,7 +119,6 @@ async function login() {
   transform: translateX(-100%);
 }
 </style>
-
 
 <!-- 
 - mb-4 : margin-bottom 4단계

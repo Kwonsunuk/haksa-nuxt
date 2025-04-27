@@ -4,9 +4,7 @@
     <h1>학사정보 열람 시스템</h1>
     <p class="text-muted">로그인 후 메뉴를 통해 열람하세요.</p>
   </div>
-  <div class="container">
-    
-  </div>
+  <div class="container"></div>
 </template>
 <script setup>
 import { useUserStore } from '~/stores/userStore'; // Pinia 스토어 가져오기

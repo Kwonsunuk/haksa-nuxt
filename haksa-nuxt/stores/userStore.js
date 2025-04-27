@@ -103,6 +103,7 @@ export const useUserStore = defineStore('user', () => {
       } else {
         logout(); // 인증 실패 시 로그아웃
       }
+      
     } catch (err) {
       console.error('[fetchMe] 서버 요청 중 오류 발생:', err);
       logout(); // 네트워크 오류 등 예외 발생 시 로그아웃

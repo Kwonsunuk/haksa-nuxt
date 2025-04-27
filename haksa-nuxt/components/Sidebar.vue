@@ -33,9 +33,7 @@
     </div>
     <div v-else-if="adminStore.me">
       <!-- 관리자 전용 메뉴 -->
-      <NuxtLink to="/notice" class="btn btn-primary mb-2 w-100"
-        >📝 공지사항 관리</NuxtLink
-      >
+      <NuxtLink to="/notice" class="btn btn-primary mb-2 w-100">📝 공지사항 관리</NuxtLink>
       <NuxtLink to="/" class="btn btn-primary mb-2 w-100">공지사항 작성</NuxtLink>
       <!-- 필요에 따라 더 관리자 메뉴 추가 -->
     </div>
@@ -46,18 +44,20 @@
 import LoginForm from './LoginForm.vue';
 import { useUserStore } from '~/stores/userStore'; // Pinia 스토어 가져오기
 import { useAdminStore } from '~/stores/adminStore'; // 관리자 스토어 가져오기
+import { useToastStore } from '~/stores/toastStore'; // Pinia 스토어 가져오기
 import { useRouter } from 'vue-router'; // Vue Router 가져오기
 
 // Pinia 스토어 인스턴스로 상태변수(me), 로그인/로그아웃 함수(login, logout)를 포함
 const userStore = useUserStore(); // 사용자 스토어 가져오기
 const adminStore = useAdminStore(); // 관리자 스토어 가져오기
 const router = useRouter(); // Vue Router 인스턴스 생성
+const toastStore = useToastStore();
 
 function onLogout() {
   userStore.logout(); // Pinia 스토어의 logout 함수 호출
   adminStore.logout(); // 관리자 스토어의 logout 함수 호출
+  toastStore.push('로그아웃 되었습니다.', 'default'); // 로그아웃 알림
   router.push('/'); // 로그아웃 후 메인 페이지로 이동
-  alert('로그아웃 되었습니다.'); // 로그아웃 알림
 }
 </script>
 

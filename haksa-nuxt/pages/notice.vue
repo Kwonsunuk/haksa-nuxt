@@ -110,10 +110,12 @@ import { ref, onMounted, computed } from 'vue';
 import { useCookie } from '#app';
 
 import { useAdminStore } from '~/stores/adminStore';
+import { useToastStore } from '~/stores/toastStore';
 
 import EditAnnouncementModal from '~/components/EditAnnouncementModal.vue';
 
 const adminStore = useAdminStore();
+const toastStore = useToastStore();
 const isAdmin = computed(() => !!adminStore.me); // 관리자 로그인 여부
 
 const notices = ref([]);
@@ -121,6 +123,7 @@ const page = ref(1);
 const size = 10;
 const totalPages = ref(1);
 const searchTerm = ref(''); // 검색어
+const lastWarnTerm  = ref(''); 
 
 const showEditModal = ref(false);
 const editingNotice = ref({});
@@ -145,25 +148,43 @@ function formatDate(dateStr) {
 
 // 공지사항 목록을 가져오는 API 호출
 async function fetchNotices() {
-  const token = authToken;
-  // 검색어가 있으면 q 파라미터 추가
+  const token = authToken
   const params = new URLSearchParams({
     page: page.value,
-    size: size,
-    ...(searchTerm.value ? { q: searchTerm.value.trim() } : {}),
-  });
-  const url = `http://localhost:4000/api/announcements?${params}`;
+    size,
+    ...(searchTerm.value.trim() ? { q: searchTerm.value.trim() } : {})
+  })
+  const url = `http://localhost:4000/api/announcements?${params}`
 
-  const res = await fetch(url, {
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-  });
-  if (!res.ok) throw new Error(`공지사항 불러오기 실패: ${res.status}`);
-  const { data, totalPages: tp } = await res.json();
-  notices.value = data;
-  totalPages.value = tp;
+  let res
+  try {
+    res = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+  } catch (err) {
+    toastStore.addToast('error', '네트워크 오류로 공지사항을 불러올 수 없습니다.', 3000)
+    return
+  }
+
+  if (!res.ok) {
+    toastStore.addToast('error', `공지사항을 불러오는데 실패했습니다: ${res.status}`, 3000)
+    return
+  }
+
+  const { data, totalPages: tp } = await res.json()
+  notices.value   = data
+  totalPages.value = tp
+
+  if (data.length === 0) {
+    const term = searchTerm.value.trim()
+    if (term && lastWarnTerm.value !== term) {
+      toastStore.addToast('warning', 'T.T 검색된 공지사항이 없습니다..', 3000)
+      lastWarnTerm.value = term
+    }
+  } else {
+    // 결과가 있거나 검색어가 비어 있으면 초기화
+    lastWarnTerm.value = ''
+  }
 }
 
 // 삭제 API 호출
@@ -178,10 +199,11 @@ async function onDelete(id) {
         Authorization: `Bearer ${useCookie('admin_token').value}`,
       },
     });
+    toastStore.addToast('success', '공지사항이 삭제되었습니다.', 4000);
     // 성공하면 로컬 리스트 갱신
     notices.value = notices.value.filter((notice) => notice.announcement_id !== id);
   } catch (err) {
-    alert('공지사항 삭제에 실패했습니다.');
+    toastStore.push('공지사항 삭제에 실패했습니다.', 'error');
     console.error(err);
   }
 }
@@ -193,20 +215,29 @@ function onEdit(notice) {
 
 // 모달에서 저장 눌렀을 때
 async function handleSave(updated) {
-  // 예: PATCH 요청 보내고
-  await fetch(`http://localhost:4000/api/admin/announcements/${updated.announcement_id}`, {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${useCookie('admin_token').value}`,
-    },
-    body: JSON.stringify({ title: updated.title, content: updated.content }),
-  });
-  // 로컬 리스트 업데이트
-  const idx = notices.value.findIndex((n) => n.announcement_id === updated.announcement_id);
-  if (idx !== -1) {
-    notices.value[idx].title = updated.title;
-    notices.value[idx].content = updated.content;
+  try {
+    // 예: PATCH 요청 보내고
+    await fetch(`http://localhost:4000/api/admin/announcements/${updated.announcement_id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${useCookie('admin_token').value}`,
+      },
+      body: JSON.stringify({ title: updated.title, content: updated.content }),
+    });
+
+    // 로컬 리스트 업데이트
+    const idx = notices.value.findIndex((n) => n.announcement_id === updated.announcement_id);
+    if (idx !== -1) {
+      notices.value[idx].title = updated.title;
+      notices.value[idx].content = updated.content;
+    }
+    toastStore.addToast('success', '공지사항이 수정되었습니다.', 4000);
+  } catch (err) {
+    toastStore.addToast('error', '공지사항 수정에 실패했습니다.', 4000);
+    console.error(err);
+  } finally {
+    showEditModal.value = false;
   }
 }
 // 검색 API 호출
@@ -252,8 +283,15 @@ async function onToggleVisibility(notice) {
     );
     // 성공하면 로컬 리스트 갱신
     notice.is_visible = !notice.is_visible;
+    const toastStore = useToastStore();
+    toastStore.addToast(
+      notice.is_visible ? 'success' : 'warning',
+      `${notice.is_visible ? '공개' : '비공개'} 처리되었습니다.`,
+      4000 // 4초 동안 표시
+    );
   } catch (err) {
     alert('공지사항 공개 상태 변경에 실패했습니다.');
+    toastStore.push('공지사항 공개 상태 변경에 실패했습니다.', 'error');
     console.error(err);
   }
 }
