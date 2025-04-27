@@ -3,7 +3,6 @@ import { useAdminStore } from '~/stores/adminStore';
 import { useCookie } from '#app';
 
 export default defineNuxtPlugin(async () => {
-  if (!process.client) return;
 
   const adminStore = useAdminStore();
   console.log('[plugin:fetchAdmin] start');
