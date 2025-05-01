@@ -121,7 +121,13 @@ export async function deleteModelAnnouncement(id) {
   return result.affectedRows;
 }
 
-// 공지사항 수정(관리자용)
+/**
+ * 
+ * @param {*} id 
+ * @param {*} title 
+ * @param {*} content 
+ * @returns 
+ */
 export async function updateModelAnnouncement(id, title, content) {
   const [result] = await pool.execute(
     `UPDATE Announcement
@@ -131,3 +137,56 @@ export async function updateModelAnnouncement(id, title, content) {
   );
   return result.affectedRows;
 };
+
+
+/**
+ * 관리자용 공지사항 생성
+ * @param {string} title
+ * @param {string} content
+ * @param {number} postedBy – 관리자 ID
+ * @param {boolean} isVisible – 공개 여부
+ * @returns {Promise<number>} – 생성된 레코드의 ID
+ */
+export async function createModelAnnouncement(
+  title,
+  content,
+  postedBy,
+  isVisible = true
+) {
+  // is_visible 컬럼까지 포함해서 INSERT
+  const [result] = await pool.execute(
+    `INSERT INTO Announcement 
+       (title, content, posted_by, is_visible, posted_date)
+     VALUES (?,       ?,       ?,         ?,          NOW())`,
+    [
+      title,
+      content,
+      postedBy,
+      isVisible ? 1 : 0   // Boolean → 1 or 0
+    ]
+  );
+  return result.insertId;
+}
+
+/**
+ * ID로 공지사항 하나 조회
+ * @param {number} id – 공지사항 ID
+ * @returns {Promise<object>} – 공지 하나의 필드 객체
+ */
+export async function fetchAnnouncementById(id) {
+  const [rows] = await pool.execute(
+    `SELECT
+       A.announcement_id,
+       A.title,
+       A.content,
+       A.posted_date,
+       A.is_visible,
+       M.name AS posted_by_name
+     FROM Announcement A
+     JOIN Admin M ON A.posted_by = M.admin_id
+     WHERE A.announcement_id = ?`,
+    [id]
+  );
+  // 없으면 undefined, 있으면 첫 번째 요소 반환
+  return rows[0];
+}

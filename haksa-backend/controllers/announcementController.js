@@ -5,6 +5,8 @@ import {
   updateAnnouncementVisibility,
   deleteModelAnnouncement,
   updateModelAnnouncement,
+  createModelAnnouncement,
+  fetchAnnouncementById
 } from "../models/announcementModel.js";
 
 export async function getAnnouncements(req, res) {
@@ -113,4 +115,49 @@ export async function updateAnnouncement(req, res) {
     return res.status(500).json({ message: "공지사항 수정 실패" });
   }
 };
-// 나머지 토스트도 변경하기..
+
+/**
+ * POST /api/admin/announcements
+ * 관리자만 호출 가능 (authAdminMiddleware 적용)
+ */
+export async function createAnnouncement(req, res) {
+  const { title, content, is_visible } = req.body;
+
+  // 1) 유효성 검사
+  if (!title || !content) {
+    return res
+      .status(400)
+      .json({ message: '제목과 내용을 모두 입력해야 합니다.' });
+  }
+
+  // 2) 토큰에서 admin_id 추출
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace(/^Bearer\s+/, '');
+  let adminId;
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    adminId = decoded.admin_id;
+  } catch (err) {
+    return res.status(401).json({ message: '유효하지 않은 토큰입니다.' });
+  }
+
+  try {
+    // 3) 공지 생성 (is_visible 값 함께 전달)
+    const newId = await createModelAnnouncement(
+      title,
+      content,
+      adminId,
+      Boolean(is_visible)
+    );
+
+    // 4) 생성된 공지 조회해서 클라이언트에 반환
+    const newAnnouncement = await fetchAnnouncementById(newId);
+    return res.status(201).json(newAnnouncement);
+
+  } catch (error) {
+    console.error('[createAnnouncement] 에러:', error);
+    return res
+      .status(500)
+      .json({ message: '공지사항 생성에 실패했습니다.' });
+  }
+}

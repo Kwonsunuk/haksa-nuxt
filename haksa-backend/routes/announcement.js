@@ -5,6 +5,7 @@ import {
   toggleVisibility,
   deleteAnnouncement,
   updateAnnouncement,
+  createAnnouncement,
 } from "../controllers/announcementController.js";
 import { authAdminMiddleware } from "../middleware/authAdminMiddleware.js";
 
@@ -21,4 +22,7 @@ router.delete("/:id", authAdminMiddleware, deleteAnnouncement);
 
 // 관리자용 공지사항 수정
 router.patch("/:id", authAdminMiddleware, updateAnnouncement);
+
+// 관리자용 공지사항 작성
+router.post("/", authAdminMiddleware, createAnnouncement);
 export default router;

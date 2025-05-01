@@ -3,15 +3,18 @@
   <div class="container">
     <div class="d-flex justify-content-between align-items-center mb-4">
       <h2 class="mb-0">📢 공지사항</h2>
-      <div class="input-group" style="max-width: 300px">
-        <input
-          v-model="searchTerm"
-          @keyup.enter="onSearch"
-          type="text"
-          class="form-control"
-          placeholder="검색어를 입력하세요"
-        />
-        <button class="btn btn-outline-secondary" @click="onSearch">🔍</button>
+      <div class="d-flex align-items-center">
+        <button @click="onOpenCreate" class="btn btn-primary me-2">공지 작성</button>
+        <div class="input-group" style="max-width: 300px">
+          <input
+            v-model="searchTerm"
+            @keyup.enter="onSearch"
+            type="text"
+            class="form-control"
+            placeholder="검색어를 입력하세요"
+          />
+          <button class="btn btn-outline-secondary" @click="onSearch">🔍</button>
+        </div>
       </div>
     </div>
 
@@ -28,18 +31,6 @@
               <h5 class="mb-1">{{ notice.title }}</h5>
               <!-- 관리자 컨트롤 (관리자 로그인 시에만 보임) -->
               <div v-if="isAdmin" class="mt-2 d-flex gap-2">
-                <!--
-                .stop을 안넣었더니 이벤트가 부모로 전파되어서 부모의 toggle이 실행됨..
-                 <button class="btn btn-sm btn-danger" @click="onDelete(notice.announcement_id)">
-                  삭제
-                </button>
-                <button class="btn btn-sm btn-secondary" @click="onEdit(notice)">수정</button>
-                <button
-                  class="btn btn-sm btn-{{ notice.is_visible ? 'warning' : 'success' }}"
-                  @click="onToggleVisibility(notice)"
-                >
-                  {{ notice.is_visible ? '비공개하기' : '공개하기' }}
-                </button> -->
                 <button
                   class="btn btn-sm btn-danger"
                   @click.stop="onDelete(notice.announcement_id)"
@@ -102,7 +93,7 @@
     </nav>
   </div>
   <!-- 모달 삽입 -->
-  <EditAnnouncementModal v-model="showEditModal" :announcement="editingNotice" @save="handleSave" />
+  <AnnouncementModal v-model="showEditModal" :announcement="editingNotice" @save="handleSave" />
 </template>
 
 <script setup>
@@ -112,7 +103,7 @@ import { useCookie } from '#app';
 import { useAdminStore } from '~/stores/adminStore';
 import { useToastStore } from '~/stores/toastStore';
 
-import EditAnnouncementModal from '~/components/EditAnnouncementModal.vue';
+import AnnouncementModal from '~/components/AnnouncementModal.vue';
 
 const adminStore = useAdminStore();
 const toastStore = useToastStore();
@@ -123,7 +114,7 @@ const page = ref(1);
 const size = 10;
 const totalPages = ref(1);
 const searchTerm = ref(''); // 검색어
-const lastWarnTerm  = ref(''); 
+const lastWarnTerm = ref('');
 
 const showEditModal = ref(false);
 const editingNotice = ref({});
@@ -148,42 +139,42 @@ function formatDate(dateStr) {
 
 // 공지사항 목록을 가져오는 API 호출
 async function fetchNotices() {
-  const token = authToken
+  const token = authToken;
   const params = new URLSearchParams({
     page: page.value,
     size,
-    ...(searchTerm.value.trim() ? { q: searchTerm.value.trim() } : {})
-  })
-  const url = `http://localhost:4000/api/announcements?${params}`
+    ...(searchTerm.value.trim() ? { q: searchTerm.value.trim() } : {}),
+  });
+  const url = `http://localhost:4000/api/announcements?${params}`;
 
-  let res
+  let res;
   try {
     res = await fetch(url, {
-      headers: { Authorization: `Bearer ${token}` }
-    })
+      headers: { Authorization: `Bearer ${token}` },
+    });
   } catch (err) {
-    toastStore.addToast('error', '네트워크 오류로 공지사항을 불러올 수 없습니다.', 3000)
-    return
+    toastStore.addToast('error', '네트워크 오류로 공지사항을 불러올 수 없습니다.', 3000);
+    return;
   }
 
   if (!res.ok) {
-    toastStore.addToast('error', `공지사항을 불러오는데 실패했습니다: ${res.status}`, 3000)
-    return
+    toastStore.addToast('error', `공지사항을 불러오는데 실패했습니다: ${res.status}`, 3000);
+    return;
   }
 
-  const { data, totalPages: tp } = await res.json()
-  notices.value   = data
-  totalPages.value = tp
+  const { data, totalPages: tp } = await res.json();
+  notices.value = data;
+  totalPages.value = tp;
 
   if (data.length === 0) {
-    const term = searchTerm.value.trim()
+    const term = searchTerm.value.trim();
     if (term && lastWarnTerm.value !== term) {
-      toastStore.addToast('warning', 'T.T 검색된 공지사항이 없습니다..', 3000)
-      lastWarnTerm.value = term
+      toastStore.addToast('warning', 'T.T 검색된 공지사항이 없습니다..', 3000);
+      lastWarnTerm.value = term;
     }
   } else {
     // 결과가 있거나 검색어가 비어 있으면 초기화
-    lastWarnTerm.value = ''
+    lastWarnTerm.value = '';
   }
 }
 
@@ -207,32 +198,63 @@ async function onDelete(id) {
     console.error(err);
   }
 }
-// 수정 버튼 클릭 시
+//  공지 수정 모달 열기
 function onEdit(notice) {
   editingNotice.value = { ...notice };
   showEditModal.value = true;
 }
+// 공지 작성 모달 열기
+function onOpenCreate() {
+  editingNotice.value = { title: '', content: '' };
+  showEditModal.value = true;
+}
 
-// 모달에서 저장 눌렀을 때
-async function handleSave(updated) {
+// 공지 생성 및 수정 처리 핸들러
+async function handleSave(item) {
   try {
-    // 예: PATCH 요청 보내고
-    await fetch(`http://localhost:4000/api/admin/announcements/${updated.announcement_id}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${useCookie('admin_token').value}`,
-      },
-      body: JSON.stringify({ title: updated.title, content: updated.content }),
-    });
+    if (item.announcement_id) {
+      // 예: PATCH 요청 보내고
+      await fetch(`http://localhost:4000/api/admin/announcements/${updated.announcement_id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${useCookie('admin_token').value}`,
+        },
+        body: JSON.stringify({ 
+          title: updated.title, 
+          content: updated.content 
+        }),
+      });
 
-    // 로컬 리스트 업데이트
-    const idx = notices.value.findIndex((n) => n.announcement_id === updated.announcement_id);
-    if (idx !== -1) {
-      notices.value[idx].title = updated.title;
-      notices.value[idx].content = updated.content;
+      // 로컬 리스트 업데이트
+      const idx = notices.value.findIndex((n) => n.announcement_id === updated.announcement_id);
+      if (idx !== -1) {
+        notices.value[idx].title = updated.title;
+        notices.value[idx].content = updated.content;
+      }
+      toastStore.addToast('success', '공지사항이 수정되었습니다.', 4000);
+    } else {
+      // 새 공지 작성
+      const res = await fetch(
+        `http://localhost:4000/api/admin/announcements`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${useCookie('admin_token').value}`,
+          },
+          body: JSON.stringify({
+            title:      item.title,
+            content:    item.content,
+            is_visible: item.is_visible,
+          }),
+        }
+      );
+      const newNotice = await res.json();
+      // 새 공지를 목록 맨 앞에 추가
+      notices.value.unshift(newNotice);
+      toastStore.addToast('success', '새 공지사항이 등록되었습니다.', 4000);
     }
-    toastStore.addToast('success', '공지사항이 수정되었습니다.', 4000);
   } catch (err) {
     toastStore.addToast('error', '공지사항 수정에 실패했습니다.', 4000);
     console.error(err);
@@ -240,6 +262,7 @@ async function handleSave(updated) {
     showEditModal.value = false;
   }
 }
+
 // 검색 API 호출
 function onSearch() {
   page.value = 1; // 검색할 때는 1페이지로 리셋

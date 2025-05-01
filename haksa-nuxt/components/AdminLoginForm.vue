@@ -46,7 +46,7 @@ async function loginAdmin() {
 
   try {
     await adminStore.login(userId.value, password.value);
-    router.push('');
+    router.push('/notice');
     toastStore.addToast('success', `${adminStore.me.name}님 환영합니다!`, 4000);
     // /admin/announcements
   } catch (err) {
