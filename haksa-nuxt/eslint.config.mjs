@@ -34,6 +34,7 @@ export default [
       'no-var': 'error',
       'consistent-return': 'error',
       'no-implicit-coercion': ['error', { boolean: false }],
+      'semi': ['error', 'always'],
 
       'simple-import-sort/exports': 'error',
       'simple-import-sort/imports': 'error',
@@ -85,6 +86,7 @@ export default [
       'unused-imports/no-unused-imports': 'error',
       'import/no-duplicates': 'error',
       'simple-import-sort/imports': 'error',
+      'semi': ['error', 'always'],
     },
   },
 ];

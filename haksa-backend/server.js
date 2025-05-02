@@ -57,7 +57,11 @@ import adminRouter from './routes/admin.js';
 /**
  * 공지사항 관련 라우터를 불러온다.
  */
+
 import announcementRouter from './routes/announcement.js';
+
+import tuitionRoutes from './routes/tuition.js';
+
 
 // .env 파일을 로드하여 환경 변수를 설정한다.
 dotenv.config();
@@ -121,6 +125,10 @@ app.use('/api/admin', adminRouter);
 app.use('/api/announcements', announcementRouter);
 
 app.use('/api/admin/announcements', announcementRouter)
+
+// 학생용 학비 조회 및 납부 처리 라우트
+app.use('/api', tuitionRoutes);
+
 
 /**
  * 서버가 실행될 포트를 지정한다.

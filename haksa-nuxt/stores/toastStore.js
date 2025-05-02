@@ -8,6 +8,8 @@ export const useToastStore = defineStore('toast', () => {
   const timers = new Map()      // Map<toastId, timeoutId>
   let counter = 0;
 
+  
+
   function addToast(type, message, duration = 3000) {
     const id = ++counter;
     toasts.value.push({ id, type, message, duration });

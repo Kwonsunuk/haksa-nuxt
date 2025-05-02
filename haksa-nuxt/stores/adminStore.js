@@ -6,10 +6,11 @@ import { useCookie } from '#app';
 export const useAdminStore = defineStore('admin', () => {
   const me = ref(null);
   const token = ref(null);
+  const base = 'http://localhost:4000';
 
   // 관리자 로그인
   async function login(userId, password) {
-    const res = await fetch('http://localhost:4000/api/admin/login', {
+    const res = await fetch(`${base}/api/admin/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ user_id: userId, password }),
@@ -34,7 +35,7 @@ export const useAdminStore = defineStore('admin', () => {
     if (!saved) return;
 
     try {
-      const res = await fetch('http://localhost:4000/api/admin/me', {
+      const res = await fetch(`${base}/api/admin/me`, {
         headers: { Authorization: `Bearer ${saved}` },
       });
       if (!res.ok) throw new Error('인증 실패');

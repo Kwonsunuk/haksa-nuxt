@@ -34,7 +34,6 @@
     <div v-else-if="adminStore.me">
       <!-- 관리자 전용 메뉴 -->
       <NuxtLink to="/notice" class="btn btn-primary mb-2 w-100">📝 공지사항 관리</NuxtLink>
-      <NuxtLink to="/" class="btn btn-primary mb-2 w-100">공지사항 작성</NuxtLink>
       <!-- 필요에 따라 더 관리자 메뉴 추가 -->
     </div>
   </div>

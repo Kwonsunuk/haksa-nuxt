@@ -12,4 +12,13 @@ export default defineNuxtConfig({
     '~/plugins/fetchAdmin.client.js',
     '~/plugins/fetchMe.client.js',
   ],
+  nitro: {
+    devProxy: {
+      '/auth/': {
+        target: 'http://localhost:4000/api/',
+        changeOrigin: true,
+        // 요청 URL '/auth/login' → 'http://localhost:4000/api/login'
+      }
+    }
+  }
 })
